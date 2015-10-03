@@ -25,33 +25,37 @@ jQueryScripts =
      "https://ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"]
 
 graphScripts :: H.Html
-graphScripts = sequence_ (map toScript $
-    ["static/js/graph/tooltip.js",
-     "static/js/common/course_videos.js",
-     "static/js/common/modal.js",
-     "static/js/graph/objects/edge.js",
-     "static/js/graph/objects/node.js",
-     "static/js/common/objects/course.js",
-     "static/js/common/cookie_handler.js",
-     "static/js/common/course_description.js",
-     "static/js/graph/sidebar/focuses.js",
-     "static/js/graph/sidebar/fce_count.js",
-     "static/js/common/objects/section.js",
-     "static/js/common/utilities/util.js",
-     "static/js/graph/utilities/structs.js",
-     "static/js/graph/utilities/util.js",
-     "static/js/graph/create_data.js",
-     "static/js/graph/parse_graph.js",
-     "static/js/graph/mouse_events.js",
-     "/static/js/common/image_conversion.js",
-     "/static/js/common/graph_image.js",
-     "static/js/graph/setup.js",
-     "static/js/post/update_post.js",
-     "static/js/graph/sidebar/sidebar_divs.js",
-     "static/js/graph/sidebar/sidebar_events.js",
-     "static/js/graph/sidebar/focus_descriptions.js",
-     "static/js/common/export/export.js"] ++
-    if enableFb then facebookScripts else [])
+graphScripts = do
+    sequence_ (map toScript $
+        ["static/js/graph/tooltip.js",
+         "static/js/common/course_videos.js",
+         "static/js/common/modal.js",
+         "static/js/graph/objects/edge.js",
+         "static/js/graph/objects/node.js",
+         "static/js/common/objects/course.js",
+         "static/js/common/cookie_handler.js",
+         "static/js/common/course_description.js",
+         "static/js/graph/sidebar/focuses.js",
+         "static/js/graph/sidebar/fce_count.js",
+         "static/js/common/objects/section.js",
+         "static/js/common/utilities/util.js",
+         "static/js/graph/utilities/structs.js",
+         "static/js/graph/utilities/util.js",
+         "static/js/graph/create_data.js",
+         "static/js/graph/parse_graph.js",
+         "static/js/graph/mouse_events.js",
+         "/static/js/common/image_conversion.js",
+         "/static/js/common/graph_image.js",
+         "static/js/graph/setup.js",
+         "static/js/post/update_post.js",
+         "static/js/graph/sidebar/sidebar_divs.js",
+         "static/js/graph/sidebar/sidebar_events.js",
+         "static/js/graph/sidebar/focus_descriptions.js",
+         "static/js/common/export/export.js",
+         "https://cdnjs.cloudflare.com/ajax/libs/react/0.13.1/react.js",
+         "https://cdnjs.cloudflare.com/ajax/libs/react/0.13.1/JSXTransformer.js"] ++
+        if enableFb then facebookScripts else [])
+    H.script ! A.type_ "text/jsx" ! A.src "static/js/common/react_modal.js" $ ""
 
 timetableScripts :: H.Html
 timetableScripts = do
