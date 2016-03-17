@@ -6,73 +6,6 @@ function renderReactGraph() {
     );
 }
 
-/**
- * Converts a NamedNodeMap of SVG attributes into a dictionary
- * of attribute name-value pairs.
- * @param {NamedNodeMap} svgAttributes
- */
-function getAttributes(svgAttributes) {
-    'use strict';
-
-    var attrs = {};
-    for (var i = 0; i < svgAttributes.length; i++) {
-        var item = svgAttributes[i];
-        // Will be hard-coding in className and textAnchor and markerEnd
-        var ignoredAttributes = ['class', 'text-anchor', 'marker-end'];
-        if (ignoredAttributes.indexOf(item.name) === -1) {
-            attrs[item.name] = item.value;
-        }
-    }
-    return attrs;
-}
-
-/**
- * Converts a style string to dictionary.
- * @param {String} styleString
- */
-function getStyles(styleString) {
-    'use strict';
-
-    //Have to check if it is null since null can't be split.
-    if (styleString === null || styleString === undefined) {
-        return {};
-    }
-
-    var styles = {};
-    styleString.split(';').forEach(function (key, value) {
-        var parts = key.split(':');
-        if (parts.length === 2) {
-            styles[parts[0]] = parts[1];
-        }
-    });
-    return styles;
-}
-
-function getNodes(mode) {
-    'use strict';
-
-    return $('#graph ' + mode).map(function (key, element) {
-        var children = Array.prototype.map.call(element.children,
-            function (child) {
-                var attrs = getAttributes(child.attributes);
-                return {
-                    'attributes': attrs,
-                    'style': getStyles(attrs['style']),
-                    //innerHTML is just for text within the <text>
-                    //there aren't anymore children since it was assumed only one level of children
-                    'innerHTML': child.innerHTML
-                };
-            });
-        var attrs = getAttributes(element.attributes);
-        return {
-            'id': element.id,
-            'attributes': attrs,
-            'style': getStyles(attrs['style']),
-            'children': children
-        };
-    }).get();
-}
-
 
 var Graph = React.createClass({
     getInitialState: function () {
@@ -157,44 +90,9 @@ var Graph = React.createClass({
         markerNode.setAttribute('markerWidth', 7);
         markerNode.setAttribute('markerHeight', 7);
 
-        //this.getGraph();
-    },
-
-    getGraph: function (graphId) {
-        if (graphId === undefined) {
-            var urlSpecifiedGraph = getURLParameter('dept');
-
-            // HACK: Temporary workaround for giving the statistics department a link to our graph.
-            // Should be replaced with a more general solution.
-            if (urlSpecifiedGraph === 'sta') {
-                graphId = '2';
-            } else if (urlSpecifiedGraph !== null) {
-                graphId = '1';
-            } else {
-                graphId = getCookie('active-graph');
-                if (graphId === '') {
-                    graphId = '1';
-                }
-            }
-        }
-
-        $.ajax({
-            type: 'GET',
-            dataType: 'text',
-            url: 'static/res/graphs/gen/' + graphId + '.svg',
-        }).success(function(data) {
-            var lines = data.split('\n');
-            $('#graph').html(lines[lines.length - 1]);
-            this.refs.nodes.parseSVG();
-            this.refs.bools.parseSVG();
-            this.refs.edges.parseSVG();
-            this.refs.regions.parseSVG();
-            this.refs.regionLabels.parseSVG();
-        }.bind(this));
     },
 
     nodeClick: function (event) {
-        console.log(event);
         var courseID = event.currentTarget.id;
         var currentNode = this.refs['nodes'].refs[courseID];
         currentNode.toggleSelection(this);
@@ -288,20 +186,6 @@ var RegionLabelGroup = React.createClass({
 });
 
 var RegionGroup = React.createClass({
-    getInitialState: function () {
-        return {
-            regionsList: []
-        };
-    },
-
-    componentDidMount: function () {
-        this.parseSVG();
-    },
-
-    parseSVG: function () {
-        this.setState({regionsList: getNodes('.region')});
-    },
-
     render: function () {
         return (
             <g id='regions'>
@@ -337,21 +221,6 @@ var Region = ({attributes, styles}) => {
 
 
 var NodeGroup = React.createClass({
-    getInitialState: function () {
-        return {
-            nodesList: [],
-            hybridsList: []
-        };
-    },
-
-    componentDidMount: function () {
-        this.parseSVG();
-    },
-
-    parseSVG: function () {
-        this.setState({nodesList: getNodes('.node'), hybridsList: getNodes('.hybrid')});
-    },
-
     render: function () {
         var svg = this.props.svg;
         var highlightedNodes = this.props.highlightedNodes;
@@ -374,6 +243,7 @@ var NodeGroup = React.createClass({
                         }
                     });
                     return <Node
+                            id={entry.id_}
                             JSON={entry}
                             className={'node'}
                             key={value}
@@ -405,6 +275,7 @@ var NodeGroup = React.createClass({
                         }
                     });
                     return <Node
+                            id={entry.id_}
                             JSON={entry}
                             className={'hybrid'}
                             key={entry.id_}
@@ -469,7 +340,7 @@ var Node = React.createClass({
             }
         }
 
-        var nodeId = this.props.attributes['id'];
+        var nodeId = this.props.id;
         this.setState({status: newState}, function () {
             setCookie(nodeId, newState);
             this.props.childs.forEach(function (node) {
@@ -570,6 +441,7 @@ var Node = React.createClass({
                 <rect {... rectAttrs} style={rectStyle} />
                 {this.props.JSON.text.map(function (textTag, value) {
                     var textAttrs = {};
+                    //var width = parseFloat(rectAttrs['width']) / 2;
                     textAttrs['x'] = textTag.pos[0];
                     textAttrs['y'] = textTag.pos[1];
                     return (
@@ -585,20 +457,6 @@ var Node = React.createClass({
 
 
 var BoolGroup = React.createClass({
-    getInitialState: function () {
-        return {
-            boolsList: []
-        };
-    },
-
-    componentDidMount: function () {
-        this.parseSVG();
-    },
-
-    parseSVG: function () {
-        this.setState({boolsList: getNodes('.bool')});
-    },
-
     render: function () {
         return (
             <g id='bools'>
@@ -618,6 +476,7 @@ var BoolGroup = React.createClass({
                         }
                     });
                     return <Bool
+                            id={entry.id_}
                             JSON={entry}
                             className='bool'
                             key={entry.id_}
@@ -746,20 +605,6 @@ var Bool = React.createClass({
 
 
 var EdgeGroup = React.createClass({
-    getInitialState: function () {
-        return {
-            edgesList: []
-        };
-    },
-
-    componentDidMount: function () {
-        this.parseSVG();
-    },
-
-    parseSVG: function () {
-        this.setState({edgesList: getNodes('.path')});
-    },
-
     render: function () {
         return (
             <g id='edges' stroke='black'>
